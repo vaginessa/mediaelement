@@ -6,13 +6,13 @@
  * so it doesn't work - not sure if Google problem or not.
  * @see https://developers.google.com/youtube/iframe_api_reference
  */
-(function (win, doc, mejs, undefined) {
+(((win, doc, mejs, undefined) => {
 
 	/**
 	 * Register YouTube type based on URL structure
 	 *
 	 */
-	mejs.Utils.typeChecks.push(function (url) {
+	mejs.Utils.typeChecks.push(url => {
 
 		url = url.toLowerCase();
 
@@ -23,7 +23,7 @@
 		}
 	});
 
-	var YouTubeApi = {
+	const YouTubeApi = {
 		/**
 		 * @type {Boolean}
 		 */
@@ -42,7 +42,7 @@
 		 *
 		 * @param {Object} settings - an object with settings needed to create <iframe>
 		 */
-		enqueueIframe: function (settings) {
+		enqueueIframe(settings) {
 
 			if (this.isLoaded) {
 				this.createIframe(settings);
@@ -56,11 +56,11 @@
 		 * Load YouTube API's script on the header of the document
 		 *
 		 */
-		loadIframeApi: function () {
+		loadIframeApi(...args) {
 			if (!this.isIframeStarted) {
-				var tag = document.createElement('script');
+				const tag = document.createElement('script');
 				tag.src = 'https://www.youtube.com/player_api';
-				var firstScriptTag = document.getElementsByTagName('script')[0];
+				const firstScriptTag = document.getElementsByTagName('script')[0];
 				firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 				this.isIframeStarted = true;
 			}
@@ -70,13 +70,13 @@
 		 * Process queue of YouTube <iframe> element creation
 		 *
 		 */
-		iFrameReady: function () {
+		iFrameReady(...args) {
 
 			this.isLoaded = true;
 			this.isIframeLoaded = true;
 
 			while (this.iframeQueue.length > 0) {
-				var settings = this.iframeQueue.pop();
+				const settings = this.iframeQueue.pop();
 				this.createIframe(settings);
 			}
 		},
@@ -86,7 +86,7 @@
 		 *
 		 * @param {Object} settings - an object with settings needed to create <iframe>
 		 */
-		createIframe: function (settings) {
+		createIframe(settings) {
 
 			console.log('creating iframe', settings);
 
@@ -103,9 +103,9 @@
 		 * @param {String} url
 		 * @return {string}
 		 */
-		getYouTubeId: function (url) {
+		getYouTubeId(url) {
 
-			var youTubeId = "";
+			let youTubeId = "";
 
 			if (url.indexOf('?') > 0) {
 				// assuming: http://www.youtube.com/watch?feature=player_embedded&v=yyWWXSwtPP0
@@ -128,22 +128,21 @@
 		 * @param {String} url
 		 * @returns {string}
 		 */
-		getYouTubeIdFromParam: function (url) {
+		getYouTubeIdFromParam(url) {
+            let youTubeId = '';
+            const parts = url.split('?');
+            const parameters = parts[1].split('&');
 
-			var youTubeId = '',
-				parts = url.split('?'),
-				parameters = parts[1].split('&');
-
-			for (var i = 0, il = parameters.length; i < il; i++) {
-				var paramParts = parameters[i].split('=');
+            for (let i = 0, il = parameters.length; i < il; i++) {
+				const paramParts = parameters[i].split('=');
 				if (paramParts[0] === 'v') {
 					youTubeId = paramParts[1];
 					break;
 				}
 			}
 
-			return youTubeId;
-		},
+            return youTubeId;
+        },
 
 		/**
 		 * Get ID from URL with formats
@@ -152,13 +151,13 @@
 		 * @param {String} url
 		 * @return {?String}
 		 */
-		getYouTubeIdFromUrl: function (url) {
+		getYouTubeIdFromUrl(url) {
 
 			if (url === undefined || url === null) {
 				return null;
 			}
 
-			var parts = url.split('?');
+			const parts = url.split('?');
 
 			url = parts[0];
 
@@ -170,12 +169,12 @@
 	 * Register YouTube API event globally
 	 *
 	 */
-	win.onYouTubePlayerAPIReady = function () {
+	win.onYouTubePlayerAPIReady = () => {
 		console.log('onYouTubePlayerAPIReady');
 		YouTubeApi.iFrameReady();
 	};
 
-	var YouTubeIframeRenderer = {
+	const YouTubeIframeRenderer = {
 		name: 'youtube_iframe',
 
 		options: {
@@ -188,8 +187,8 @@
 		 * @param {String} type
 		 * @return {Boolean}
 		 */
-		canPlayType: function (type) {
-			var mediaTypes = ['video/youtube', 'video/x-youtube'];
+		canPlayType(type) {
+			const mediaTypes = ['video/youtube', 'video/x-youtube'];
 
 			return mediaTypes.indexOf(type) > -1;
 		},
@@ -201,321 +200,316 @@
 		 * @param {Object[]} mediaFiles List of sources with format: {src: url, type: x/y-z}
 		 * @return {Object}
 		 */
-		create: function (mediaElement, options, mediaFiles) {
+		create(mediaElement, options, mediaFiles) {
+            // exposed object
+            const youtube = {};
+            youtube.options = options;
+            youtube.id = `${mediaElement.id}_${options.prefix}`;
+            youtube.mediaElement = mediaElement;
 
-			// exposed object
-			var youtube = {};
-			youtube.options = options;
-			youtube.id = mediaElement.id + '_' + options.prefix;
-			youtube.mediaElement = mediaElement;
+            // API objects
+            const apiStack = [];
 
-			// API objects
-			var apiStack = [],
-				youTubeApi = null,
-				youTubeApiReady = false,
-				paused = true,
-				ended = false,
-				youTubeIframe = null,
-				i,
-				il;
+            let youTubeApi = null;
+            let youTubeApiReady = false;
+            let paused = true;
+            let ended = false;
+            let youTubeIframe = null;
+            let i;
+            let il;
 
-			// wrappers for get/set
-			var
-				props = mejs.html5media.properties,
-				assignGettersSetters = function (propName) {
+            // wrappers for get/set
+            const props = mejs.html5media.properties;
 
-					// add to flash state that we will store
+            const assignGettersSetters = propName => {
 
-					var capName = propName.substring(0, 1).toUpperCase() + propName.substring(1);
+                // add to flash state that we will store
 
-					youtube['get' + capName] = function () {
-						if (youTubeApi !== null) {
-							var value = null;
+                const capName = propName.substring(0, 1).toUpperCase() + propName.substring(1);
 
-							// figure out how to get youtube dta here
-							switch (propName) {
-								case 'currentTime':
-									return youTubeApi.getCurrentTime();
+                youtube[`get${capName}`] = () => {
+                    if (youTubeApi !== null) {
+                        const value = null;
 
-								case 'duration':
-									return youTubeApi.getDuration();
+                        // figure out how to get youtube dta here
+                        switch (propName) {
+                            case 'currentTime':
+                                return youTubeApi.getCurrentTime();
 
-								case 'volume':
-									return youTubeApi.getVolume();
+                            case 'duration':
+                                return youTubeApi.getDuration();
 
-								case 'paused':
-									console.log('YT paused', youTubeState);
+                            case 'volume':
+                                return youTubeApi.getVolume();
 
-									return paused;
+                            case 'paused':
+                                console.log('YT paused', youTubeState);
 
-								case 'ended':
-									return ended;
+                                return paused;
 
-								case 'muted':
-									return youTubeApi.isMuted(); // ?
+                            case 'ended':
+                                return ended;
 
-								case 'buffered':
-									var percentLoaded = youTubeApi.getVideoLoadedFraction(),
-										duration = youTubeApi.getDuration();
-									return {
-										start: function () {
-											return 0;
-										},
-										end: function () {
-											return percentLoaded * duration;
-										},
-										length: 1
-									};
-								case 'src':
-									return youTubeApi.getVideoUrl();
-							}
+                            case 'muted':
+                                return youTubeApi.isMuted(); // ?
 
-							return value;
-						} else {
-							return null;
-						}
-					};
+                            case 'buffered':
+                                const percentLoaded = youTubeApi.getVideoLoadedFraction(), duration = youTubeApi.getDuration();
+                                return {
+                                    start(...args) {
+                                        return 0;
+                                    },
+                                    end(...args) {
+                                        return percentLoaded * duration;
+                                    },
+                                    length: 1
+                                };
+                            case 'src':
+                                return youTubeApi.getVideoUrl();
+                        }
 
-					youtube['set' + capName] = function (value) {
-						//console.log('[' + options.prefix + ' set]: ' + propName + ' = ' + value, t.flashApi);
+                        return value;
+                    } else {
+                        return null;
+                    }
+                };
 
-						if (youTubeApi !== null) {
+                youtube[`set${capName}`] = value => {
+                    //console.log('[' + options.prefix + ' set]: ' + propName + ' = ' + value, t.flashApi);
 
-							// do something
-							switch (propName) {
+                    if (youTubeApi !== null) {
 
-								case 'src':
-									var url = typeof value === 'string' ? value : value[0].src,
-										videoId = YouTubeApi.getYouTubeId(url);
+                        // do something
+                        switch (propName) {
 
-									if (mediaElement.getAttribute('autoplay')) {
-										youTubeApi.loadVideoById(videoId);
-									} else {
-										youTubeApi.cueVideoById(videoId);
-									}
-									break;
+                            case 'src':
+                                const url = typeof value === 'string' ? value : value[0].src, videoId = YouTubeApi.getYouTubeId(url);
 
-								case 'currentTime':
-									youTubeApi.seekTo(value);
-									break;
+                                if (mediaElement.getAttribute('autoplay')) {
+                                    youTubeApi.loadVideoById(videoId);
+                                } else {
+                                    youTubeApi.cueVideoById(videoId);
+                                }
+                                break;
 
-								case 'muted':
-									if (value) {
-										youTubeApi.mute(); // ?
-									} else {
-										youTubeApi.unMute(); // ?
-									}
-									setTimeout(function () {
-										var event = mejs.Utils.createEvent('volumechange', youtube);
-										mediaElement.dispatchEvent(event);
-									}, 50);
-									break;
+                            case 'currentTime':
+                                youTubeApi.seekTo(value);
+                                break;
 
-								case 'volume':
-									youTubeApi.setVolume(value);
-									setTimeout(function () {
-										var event = mejs.Utils.createEvent('volumechange', youtube);
-										mediaElement.dispatchEvent(event);
-									}, 50);
-									break;
+                            case 'muted':
+                                if (value) {
+                                    youTubeApi.mute(); // ?
+                                } else {
+                                    youTubeApi.unMute(); // ?
+                                }
+                                setTimeout(() => {
+                                    const event = mejs.Utils.createEvent('volumechange', youtube);
+                                    mediaElement.dispatchEvent(event);
+                                }, 50);
+                                break;
 
-								default:
-									console.log('youtube ' + id, propName, 'UNSUPPORTED property');
-							}
+                            case 'volume':
+                                youTubeApi.setVolume(value);
+                                setTimeout(() => {
+                                    const event = mejs.Utils.createEvent('volumechange', youtube);
+                                    mediaElement.dispatchEvent(event);
+                                }, 50);
+                                break;
 
-						} else {
-							// store for after "READY" event fires
-							apiStack.push({type: 'set', propName: propName, value: value});
-						}
-					};
+                            default:
+                                console.log(`youtube ${id}`, propName, 'UNSUPPORTED property');
+                        }
 
-				}
-			;
-			for (i = 0, il = props.length; i < il; i++) {
+                    } else {
+                        // store for after "READY" event fires
+                        apiStack.push({type: 'set', propName: propName, value: value});
+                    }
+                };
+
+            };
+
+            for (i = 0, il = props.length; i < il; i++) {
 				assignGettersSetters(props[i]);
 			}
 
-			// add wrappers for native methods
-			var
-				methods = mejs.html5media.methods,
-				assignMethods = function (methodName) {
+            // add wrappers for native methods
+            const methods = mejs.html5media.methods;
 
-					// run the method on the native HTMLMediaElement
-					youtube[methodName] = function () {
-						console.log('[' + options.prefix + ' ' + methodName + '()]');
+            const assignMethods = methodName => {
 
-						if (youTubeApi !== null) {
+                // run the method on the native HTMLMediaElement
+                youtube[methodName] = () => {
+                    console.log(`[${options.prefix} ${methodName}()]`);
 
-							// DO method
-							switch (methodName) {
-								case 'play':
-									return youTubeApi.playVideo();
-								case 'pause':
-									return youTubeApi.pauseVideo();
-								case 'load':
-									return null;
+                    if (youTubeApi !== null) {
 
-							}
+                        // DO method
+                        switch (methodName) {
+                            case 'play':
+                                return youTubeApi.playVideo();
+                            case 'pause':
+                                return youTubeApi.pauseVideo();
+                            case 'load':
+                                return null;
 
-						} else {
-							apiStack.push({type: 'call', methodName: methodName});
-						}
-					};
+                        }
 
-				}
-			;
-			for (i = 0, il = methods.length; i < il; i++) {
+                    } else {
+                        apiStack.push({type: 'call', methodName: methodName});
+                    }
+                };
+
+            };
+
+            for (i = 0, il = methods.length; i < il; i++) {
 				assignMethods(methods[i]);
 			}
 
-			// CREATE YouTube
-			var youtubeContainer = doc.createElement('div');
-			youtubeContainer.id = youtube.id;
-			mediaElement.originalNode.parentNode.insertBefore(youtubeContainer, mediaElement.originalNode);
-			mediaElement.originalNode.style.display = 'none';
+            // CREATE YouTube
+            const youtubeContainer = doc.createElement('div');
+            youtubeContainer.id = youtube.id;
+            mediaElement.originalNode.parentNode.insertBefore(youtubeContainer, mediaElement.originalNode);
+            mediaElement.originalNode.style.display = 'none';
 
-			var
-				height = mediaElement.originalNode.height,
-				width = mediaElement.originalNode.width,
-				videoId = YouTubeApi.getYouTubeId(mediaFiles[0].src),
-				youtubeSettings = {
-					id: youtube.id,
-					containerId: youtubeContainer.id,
-					videoId: videoId,
-					height: height,
-					width: width,
-					playerVars: {
-						controls: 0,
-						rel: 0,
-						disablekb: 1,
-						showinfo: 0,
-						modestbranding: 0,
-						html5: 1,
-						playsinline: 1
-					},
-					origin: win.location.host,
-					events: {
-						onReady: function (e) {
+            const height = mediaElement.originalNode.height;
+            const width = mediaElement.originalNode.width;
+            const videoId = YouTubeApi.getYouTubeId(mediaFiles[0].src);
 
-							youTubeApiReady = true;
-							mediaElement.youTubeApi = youTubeApi = e.target;
-							mediaElement.youTubeState = youTubeState = {
-								paused: true,
-								ended: false
-							};
+            const youtubeSettings = {
+                id: youtube.id,
+                containerId: youtubeContainer.id,
+                videoId: videoId,
+                height: height,
+                width: width,
+                playerVars: {
+                    controls: 0,
+                    rel: 0,
+                    disablekb: 1,
+                    showinfo: 0,
+                    modestbranding: 0,
+                    html5: 1,
+                    playsinline: 1
+                },
+                origin: win.location.host,
+                events: {
+                    onReady(e) {
 
-							// do call stack
-							for (i = 0, il = apiStack.length; i < il; i++) {
+                        youTubeApiReady = true;
+                        mediaElement.youTubeApi = youTubeApi = e.target;
+                        mediaElement.youTubeState = youTubeState = {
+                            paused: true,
+                            ended: false
+                        };
 
-								var stackItem = apiStack[i];
+                        // do call stack
+                        for (i = 0, il = apiStack.length; i < il; i++) {
 
-								console.log('stack', stackItem.type);
+                            const stackItem = apiStack[i];
 
-								if (stackItem.type === 'set') {
-									var propName = stackItem.propName,
-										capName = propName.substring(0, 1).toUpperCase() + propName.substring(1);
+                            console.log('stack', stackItem.type);
 
-									youtube['set' + capName](stackItem.value);
-								} else if (stackItem.type === 'call') {
-									youtube[stackItem.methodName]();
-								}
-							}
+                            if (stackItem.type === 'set') {
+                                const propName = stackItem.propName, capName = propName.substring(0, 1).toUpperCase() + propName.substring(1);
 
-							// a few more events
-							youTubeIframe = youTubeApi.getIframe();
+                                youtube[`set${capName}`](stackItem.value);
+                            } else if (stackItem.type === 'call') {
+                                youtube[stackItem.methodName]();
+                            }
+                        }
 
-							console.log('iframe', youTubeIframe);
+                        // a few more events
+                        youTubeIframe = youTubeApi.getIframe();
 
-							var
-								events = ['mouseover', 'mouseout'],
-								assignEvents = function (e) {
+                        console.log('iframe', youTubeIframe);
 
-									console.log('youtube iframe', e.type);
+                        const events = ['mouseover', 'mouseout'],
+                              assignEvents = e => {
 
-									var event = mejs.Utils.createEvent(e.type, youtube);
+                                  console.log('youtube iframe', e.type);
 
-									mediaElement.dispatchEvent(event);
-								}
-							;
+                                  const event = mejs.Utils.createEvent(e.type, youtube);
 
-							for (var j in events) {
-								var eventName = events[j];
-								mejs.addEvent(youTubeIframe, eventName, assignEvents);
-							}
+                                  mediaElement.dispatchEvent(event);
+                              };
 
-							// send init events
-							var initEvents = ['rendererready', 'loadeddata', 'loadedmetadata', 'canplay'];
+                        for (const j in events) {
+                            const eventName = events[j];
+                            mejs.addEvent(youTubeIframe, eventName, assignEvents);
+                        }
 
-							for (i = 0, il = initEvents.length; i < il; i++) {
-								var event = mejs.Utils.createEvent(initEvents[i], youtube);
-								mediaElement.dispatchEvent(event);
-							}
-						},
-						onStateChange: function (e) {
+                        // send init events
+                        const initEvents = ['rendererready', 'loadeddata', 'loadedmetadata', 'canplay'];
 
-							// translate events
-							var events = [];
+                        for (i = 0, il = initEvents.length; i < il; i++) {
+                            const event = mejs.Utils.createEvent(initEvents[i], youtube);
+                            mediaElement.dispatchEvent(event);
+                        }
+                    },
+                    onStateChange(e) {
 
-							switch (e.data) {
-								case -1: // not started
-									events = ['loadedmetadata'];
-									paused = true;
-									ended = false;
-									break;
+                        // translate events
+                        let events = [];
 
-								case 0: // YT.PlayerState.ENDED
-									events = ['ended'];
-									paused = false;
-									ended = true;
+                        switch (e.data) {
+                            case -1: // not started
+                                events = ['loadedmetadata'];
+                                paused = true;
+                                ended = false;
+                                break;
 
-									youtube.stopInterval();
-									break;
+                            case 0: // YT.PlayerState.ENDED
+                                events = ['ended'];
+                                paused = false;
+                                ended = true;
 
-								case 1:	// YT.PlayerState.PLAYING
-									events = ['play', 'playing'];
-									paused = false;
-									ended = false;
+                                youtube.stopInterval();
+                                break;
 
-									youtube.startInterval();
+                            case 1:	// YT.PlayerState.PLAYING
+                                events = ['play', 'playing'];
+                                paused = false;
+                                ended = false;
 
-									break;
+                                youtube.startInterval();
 
-								case 2: // YT.PlayerState.PAUSED
-									events = ['pause'];
-									paused = true;
-									ended = false;
+                                break;
 
-									youtube.stopInterval();
-									break;
+                            case 2: // YT.PlayerState.PAUSED
+                                events = ['pause'];
+                                paused = true;
+                                ended = false;
 
-								case 3: // YT.PlayerState.BUFFERING
-									events = ['progress'];
-									paused = false;
-									ended = false;
+                                youtube.stopInterval();
+                                break;
 
-									break;
-								case 5: // YT.PlayerState.CUED
-									events = ['loadeddata', 'loadedmetadata', 'canplay'];
-									paused = true;
-									ended = false;
+                            case 3: // YT.PlayerState.BUFFERING
+                                events = ['progress'];
+                                paused = false;
+                                ended = false;
 
-									break;
-							}
+                                break;
+                            case 5: // YT.PlayerState.CUED
+                                events = ['loadeddata', 'loadedmetadata', 'canplay'];
+                                paused = true;
+                                ended = false;
 
-							// send events up
-							for (var i = 0, il = events.length; i < il; i++) {
-								var event = mejs.Utils.createEvent(events[i], youtube);
-								mediaElement.dispatchEvent(event);
-							}
+                                break;
+                        }
 
-						}
-					}
-				};
+                        // send events up
+                        for (let i = 0, il = events.length; i < il; i++) {
+                            const event = mejs.Utils.createEvent(events[i], youtube);
+                            mediaElement.dispatchEvent(event);
+                        }
 
-			// send it off for async loading and creation
-			YouTubeApi.enqueueIframe(youtubeSettings);
+                    }
+                }
+            };
 
-			youtube.onEvent = function (eventName, player, _youTubeState) {
+            // send it off for async loading and creation
+            YouTubeApi.enqueueIframe(youtubeSettings);
+
+            youtube.onEvent = (eventName, player, _youTubeState) => {
 				console.log('yt event', eventName);
 				if (_youTubeState !== null && _youTubeState !== undefined) {
 					mediaElement.youTubeState = youTubeState = _youTubeState;
@@ -523,47 +517,47 @@
 
 			};
 
-			youtube.setSize = function (width, height) {
+            youtube.setSize = (width, height) => {
 				youTubeApi.setSize(width, height);
 			};
-			youtube.hide = function () {
+            youtube.hide = () => {
 				youtube.stopInterval();
 				youtube.pause();
 				if (youTubeIframe) {
 					youTubeIframe.style.display = 'none';
 				}
 			};
-			youtube.show = function () {
+            youtube.show = () => {
 				if (youTubeIframe) {
 					youTubeIframe.style.display = '';
 				}
 			};
-			youtube.destroy = function () {
+            youtube.destroy = () => {
 				youTubeApi.destroy();
 			};
-			youtube.interval = null;
+            youtube.interval = null;
 
-			youtube.startInterval = function () {
+            youtube.startInterval = () => {
 				// create timer
-				youtube.interval = setInterval(function () {
+				youtube.interval = setInterval(() => {
 
-					var event = mejs.Utils.createEvent('timeupdate', youtube);
+					const event = mejs.Utils.createEvent('timeupdate', youtube);
 					mediaElement.dispatchEvent(event);
 
 				}, 250);
 			};
-			youtube.stopInterval = function () {
+            youtube.stopInterval = () => {
 				if (youtube.interval) {
 					clearInterval(youtube.interval);
 				}
 			};
 
-			return youtube;
-		}
+            return youtube;
+        }
 	};
 
 	if (window.postMessage && typeof window.addEventListener) {
 		mejs.Renderers.add(YouTubeIframeRenderer);
 	}
 
-})(window, document, window.mejs || {});
+}))(window, document, window.mejs || {});

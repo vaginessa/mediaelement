@@ -3,7 +3,7 @@
  *
  * Sponsored by Minoto Video
  */
-(function($) {
+(($ => {
 
 	// Feature configuration
 	$.extend(mejs.MepDefaults, {
@@ -42,9 +42,9 @@
 		 * @param {$} layers
 		 * @param {HTMLElement} media
 		 */
-		buildvast: function(player, controls, layers, media) {
+		buildvast(player, controls, layers, media) {
 
-			var t = this;	
+			const t = this;	
 			
 			// begin loading
 			if (t.options.vastAdTagUrl !== '') {
@@ -57,16 +57,16 @@
 			t.vastSetupEvents();					
 		},
 	
-		vastSetupEvents: function() {
-			var t = this;
+		vastSetupEvents(...args) {
+			const t = this;
 			
 			
 			// START: preroll
-			t.container.on('mejsprerollstarted', function() {			
+			t.container.on('mejsprerollstarted', () => {			
 
 				if (t.vastAdTags.length > 0) {
 				
-					var adTag = t.vastAdTags[0];
+					const adTag = t.vastAdTags[0];
 					
 					// always fire this event
 					if (adTag.trackingEvents.start) {
@@ -76,7 +76,7 @@
 					// only do impressions once
 					if (!adTag.shown && adTag.impressions.length > 0) {
 						
-						for (var i=0, il=adTag.impressions.length; i<il; i++) {
+						for (let i=0, il=adTag.impressions.length; i<il; i++) {
 							t.adsLoadUrl(adTag.impressions[i]);
 						}
 					}
@@ -87,7 +87,7 @@
 			});
 			
 			// END: preroll
-			t.container.on('mejsprerollended', function() {			
+			t.container.on('mejsprerollended', () => {			
 
 				console.log('VAST','mejsprerollended');
 				
@@ -104,9 +104,9 @@
 		 *
 		 * @param {String} url
 		 */
-		vastSetAdTagUrl: function(url) {
+		vastSetAdTagUrl(url) {
 		
-			var t = this;		
+			const t = this;		
 		
 			// set and reset
 			t.options.vastAdTagUrl = url;
@@ -118,10 +118,10 @@
 		/**
 		 *
 		 */
-		vastLoadAdTagInfo: function() {
+		vastLoadAdTagInfo(...args) {
 			console.log('loading vast ad data');
 			
-			var t = this;
+			const t = this;
 			
 			// set this to stop playback
 			t.adsDataIsLoading = true;
@@ -134,20 +134,20 @@
 		/**
 		 *
 		 */
-		loadAdTagInfoDirect: function() {
+		loadAdTagInfoDirect(...args) {
 			console.log('loading vast:direct');
 			
-			var t = this;
+			const t = this;
 			
 			$.ajax({
 				url: t.options.vastAdTagUrl,
 				crossDomain: true,
-				success: function(data) {
+				success(data) {
 					console.log('vast:direct:success', data);
 					
 					t.vastParseVastData(data);
 				},
-				error: function(err) {
+				error(err) {
 					console.log('vast3:direct:error', err);
 					
 					// fallback to Yahoo proxy
@@ -159,83 +159,81 @@
 		/**
 		 *
 		 */
-		loadAdTagInfoProxy: function() {
-			console.log('loading vast:proxy:yahoo');
-			
-			var t = this,
-				protocol = location.protocol,
-				hostname = location.hostname,
-				query = 'select * from xml where url="' + encodeURI(t.options.vastAdTagUrl) +'"',
-				yahooUrl = 'http' + (/^https/.test(protocol)?'s':'') + '://query.yahooapis.com/v1/public/yql?format=xml&q=' + query;
+		loadAdTagInfoProxy(...args) {
+            console.log('loading vast:proxy:yahoo');
+
+            const t = this;
+            const protocol = location.protocol;
+            const hostname = location.hostname;
+            const query = `select * from xml where url="${encodeURI(t.options.vastAdTagUrl)}"`;
+            const yahooUrl = `http${/^https/.test(protocol)?'s':''}://query.yahooapis.com/v1/public/yql?format=xml&q=${query}`;
 
 
-			
-			$.ajax({
+
+            $.ajax({
 				url: yahooUrl,
 				crossDomain: true,
-				success: function(data) {
+				success(data) {
 					console.log('vast:proxy:yahoo:success', data);	
 					
 					t.vastParseVastData(data);			
 				},
-				error: function(err) {
+				error(err) {
 					console.log('vast:proxy:yahoo:error', err);
 				}	
 			});
-		},
+        },
 
 		/**
 		 *
 		 * @param {jQuery} data
 		 */
-		vastParseVastData: function(data) {
+		vastParseVastData(data) {
 			
-			var t = this;
+			const t = this;
 			
 			
 			// clear out data
 			t.vastAdTags = [];
 			t.options.indexPreroll = 0;
 			
-			$(data).find('Ad').each(function(index, node) {
-					
-				var 
-					adNode = $(node),
-					
-					adTag = {					
-						id: adNode.attr('id'),
-						title: $.trim( adNode.find('AdTitle').text() ),
-						description: $.trim( adNode.find('Description').text() ),
-						impressions: [],
-						clickThrough: $.trim( adNode.find('ClickThrough').text() ),
-						mediaFiles: [],
-						trackingEvents: {},
-						
-						// internal tracking if it's been used
-						shown: false
-					};	
-					
-				t.vastAdTags.push(adTag);				
-				
-					
-				// parse all needed nodes
-				adNode.find('Impression').each(function() {
+			$(data).find('Ad').each((index, node) => {
+                const adNode = $(node);
+
+                const adTag = {					
+                    id: adNode.attr('id'),
+                    title: $.trim( adNode.find('AdTitle').text() ),
+                    description: $.trim( adNode.find('Description').text() ),
+                    impressions: [],
+                    clickThrough: $.trim( adNode.find('ClickThrough').text() ),
+                    mediaFiles: [],
+                    trackingEvents: {},
+                    
+                    // internal tracking if it's been used
+                    shown: false
+                };
+
+                t.vastAdTags.push(adTag);
+
+
+                // parse all needed nodes
+                adNode.find('Impression').each(function(...args) {
 					adTag.impressions.push( $.trim( $(this).text() ) );
-				});	
-				
-				adNode.find('Tracking').each(function(index, node) {
-					var trackingEvent = $(node);
+				});
+
+                adNode.find('Tracking').each((index, node) => {
+					const trackingEvent = $(node);
 				
 					adTag.trackingEvents[trackingEvent.attr('event')] = $.trim( trackingEvent.text() );
 					
-				});		
-				
-		
-				adNode.find('MediaFile').each(function(index, node) {
-					var mediaFile = $(node),
-						type = mediaFile.attr('type');
-						
-					if (t.media.canPlayType(type).toString().replace(/no/,'').replace(/false/,'') !== '') {
+				});
+
+
+                adNode.find('MediaFile').each((index, node) => {
+                    const mediaFile = $(node);
+                    const type = mediaFile.attr('type');
+
+                    if (t.media.canPlayType(type).toString().replace(/no/,'').replace(/false/,'') !== '') {
 					
 						adTag.mediaFiles.push({
 							id: mediaFile.attr('id'),
@@ -247,9 +245,8 @@
 							url:  $.trim( mediaFile.text() )
 						} );
 					}
-				});		
-				
-			});
+                });
+            });
 		
 			// DONE
 			t.vastLoaded();
@@ -258,8 +255,8 @@
 		/**
 		 *
 		 */
-		vastLoaded: function() {
-			var t = this;
+		vastLoaded(...args) {
+			const t = this;
 			
 			t.vastAdTagIsLoaded = true;
 			t.vastAdTagIsLoading = false;
@@ -271,15 +268,15 @@
 		/**
 		 *
 		 */
-		vastStartPreroll: function() {
+		vastStartPreroll(...args) {
 			console.log('vastStartPreroll');
 						
-			var t = this;
+			const t = this;
 				
 			// if we have a media URL, then send it up to the ads plugin as a preroll
 			// load up the vast ads to be played before the selected media.
 			// Note: multiple preroll ads are supported.
-			var i = 0;
+			let i = 0;
 			while (i < t.vastAdTags.length) {
 				t.options.adsPrerollMediaUrl[i] = t.vastAdTags[i].mediaFiles[0].url;
 				console.log(t.options.adsPrerollMediaUrl[i]);
@@ -292,4 +289,4 @@
 		
 	});
 
-})(mejs.$);
+}))(mejs.$);

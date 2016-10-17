@@ -7,13 +7,13 @@
  * @see https://github.com/Dash-Industry-Forum/dash.js
  *
  */
-(function (win, doc, mejs, undefined) {
+(((win, doc, mejs, undefined) => {
 
 	/**
 	 * Register Native M(PEG)-Dash type based on URL structure
 	 *
 	 */
-	mejs.Utils.typeChecks.push(function (url) {
+	mejs.Utils.typeChecks.push(url => {
 
 		url = url.toLowerCase();
 
@@ -24,7 +24,7 @@
 		}
 	});
 
-	var NativeDash = {
+	const NativeDash = {
 		/**
 		 * @type {Boolean}
 		 */
@@ -38,7 +38,7 @@
 		 * Create a queue to prepare the loading of an HLS source
 		 * @param {Object} settings - an object with settings needed to load an HLS player instance
 		 */
-		prepareSettings: function (settings) {
+		prepareSettings(settings) {
 			if (this.isLoaded) {
 				this.createInstance(settings);
 			} else {
@@ -51,18 +51,16 @@
 		 * Load dash.all.min.js script on the header of the document
 		 *
 		 */
-		loadScript: function () {
+		loadScript(...args) {
 			if (!this.isScriptLoaded) {
+                const script = doc.createElement('script');
+                const firstScriptTag = doc.getElementsByTagName('script')[0];
+                let done = false;
 
-				var
-					script = doc.createElement('script'),
-					firstScriptTag = doc.getElementsByTagName('script')[0],
-					done = false;
+                script.src = 'https://cdn.dashjs.org/latest/dash.all.min.js';
 
-				script.src = 'https://cdn.dashjs.org/latest/dash.all.min.js';
-
-				// Attach handlers for all browsers
-				script.onload = script.onreadystatechange = function () {
+                // Attach handlers for all browsers
+                script.onload = script.onreadystatechange = function(...args) {
 					if (!done && (!this.readyState || this.readyState === undefined ||
 						this.readyState === 'loaded' || this.readyState === 'complete')) {
 						done = true;
@@ -71,22 +69,22 @@
 					}
 				};
 
-				firstScriptTag.parentNode.insertBefore(script, firstScriptTag);
-				this.isScriptLoaded = true;
-			}
+                firstScriptTag.parentNode.insertBefore(script, firstScriptTag);
+                this.isScriptLoaded = true;
+            }
 		},
 
 		/**
 		 * Process queue of Dash player creation
 		 *
 		 */
-		mediaReady: function () {
+		mediaReady(...args) {
 
 			this.isLoaded = true;
 			this.isScriptLoaded = true;
 
 			while (this.creationQueue.length > 0) {
-				var settings = this.creationQueue.pop();
+				const settings = this.creationQueue.pop();
 				this.createInstance(settings);
 			}
 		},
@@ -96,14 +94,14 @@
 		 *
 		 * @param {Object} settings - an object with settings needed to instantiate HLS object
 		 */
-		createInstance: function (settings) {
+		createInstance(settings) {
 
-			var player = dashjs.MediaPlayer().create();
-			win['__ready__' + settings.id](player);
+			const player = dashjs.MediaPlayer().create();
+			win[`__ready__${settings.id}`](player);
 		}
 	};
 
-	var DashNativeRenderer = {
+	const DashNativeRenderer = {
 		name: 'native_mdash',
 
 		options: {
@@ -116,9 +114,9 @@
 		 * @param {String} type
 		 * @return {Boolean}
 		 */
-		canPlayType: function (type) {
+		canPlayType(type) {
 
-			var mediaTypes = ['application/dash+xml'];
+			const mediaTypes = ['application/dash+xml'];
 			return mejs.MediaFeatures.hasMse && mediaTypes.indexOf(type) > -1;
 		},
 		/**
@@ -129,146 +127,143 @@
 		 * @param {Object[]} mediaFiles List of sources with format: {src: url, type: x/y-z}
 		 * @return {Object}
 		 */
-		create: function (mediaElement, options, mediaFiles) {
+		create(mediaElement, options, mediaFiles) {
+            let node = null;
+            const originalNode = mediaElement.originalNode;
+            let i;
+            let il;
+            const id = `${mediaElement.id}_${options.prefix}`;
+            let dashPlayer;
+            const stack = {};
 
-			var
-				node = null,
-				originalNode = mediaElement.originalNode,
-				i,
-				il,
-				id = mediaElement.id + '_' + options.prefix,
-				dashPlayer,
-				stack = {}
-				;
+            node = originalNode.cloneNode(true);
 
-			node = originalNode.cloneNode(true);
+            // WRAPPERS for PROPs
+            const props = mejs.html5media.properties;
 
-			// WRAPPERS for PROPs
-			var
-				props = mejs.html5media.properties,
-				assignGettersSetters = function (propName) {
-					var capName = propName.substring(0, 1).toUpperCase() + propName.substring(1);
+            const assignGettersSetters = propName => {
+                const capName = propName.substring(0, 1).toUpperCase() + propName.substring(1);
 
-					node['get' + capName] = function () {
-						if (dashPlayer !== null) {
-							return node[propName];
-						} else {
-							return null;
-						}
-					};
+                node[`get${capName}`] = () => {
+                    if (dashPlayer !== null) {
+                        return node[propName];
+                    } else {
+                        return null;
+                    }
+                };
 
-					node['set' + capName] = function (value) {
-						if (dashPlayer !== null) {
-							if (propName === 'src') {
+                node[`set${capName}`] = value => {
+                    if (dashPlayer !== null) {
+                        if (propName === 'src') {
 
-								dashPlayer.attachSource(value);
+                            dashPlayer.attachSource(value);
 
-								if (node.getAttribute('autoplay')) {
-									node.play();
-								}
-							}
+                            if (node.getAttribute('autoplay')) {
+                                node.play();
+                            }
+                        }
 
-							node[propName] = value;
-						} else {
-							// store for after "READY" event fires
-							stack.push({type: 'set', propName: propName, value: value});
-						}
-					};
+                        node[propName] = value;
+                    } else {
+                        // store for after "READY" event fires
+                        stack.push({type: 'set', propName: propName, value: value});
+                    }
+                };
 
-				}
-			;
-			for (i = 0, il = props.length; i < il; i++) {
+            };
+
+            for (i = 0, il = props.length; i < il; i++) {
 				assignGettersSetters(props[i]);
 			}
 
-			// Initial method to register all M-Dash events
-			win['__ready__' + id] = function (_dashPlayer) {
+            // Initial method to register all M-Dash events
+            win[`__ready__${id}`] = _dashPlayer => {
+                mediaElement.dashPlayer = dashPlayer = _dashPlayer;
 
-				mediaElement.dashPlayer = dashPlayer = _dashPlayer;
-
-				// By default, console log is off
-				dashPlayer.getDebug().setLogToBrowserConsole(false);
+                // By default, console log is off
+                dashPlayer.getDebug().setLogToBrowserConsole(false);
 
 
-				console.log('Native M-Dash ready', dashPlayer);
+                console.log('Native M-Dash ready', dashPlayer);
 
-				// do call stack
-				for (i = 0, il = stack.length; i < il; i++) {
+                // do call stack
+                for (i = 0, il = stack.length; i < il; i++) {
 
-					var stackItem = stack[i];
+					const stackItem = stack[i];
 
 					if (stackItem.type === 'set') {
-						var propName = stackItem.propName,
-							capName = propName.substring(0, 1).toUpperCase() + propName.substring(1);
+                        const propName = stackItem.propName;
+                        const capName = propName.substring(0, 1).toUpperCase() + propName.substring(1);
 
-						node['set' + capName](stackItem.value);
-					} else if (stackItem.type === 'call') {
+                        node[`set${capName}`](stackItem.value);
+                    } else if (stackItem.type === 'call') {
 						node[stackItem.methodName]();
 					}
 				}
 
-				// BUBBLE EVENTS
-				var
-					events = mejs.html5media.events, dashEvents = dashjs.MediaPlayer.events,
-					assignEvents = function (eventName) {
+                // BUBBLE EVENTS
+                let events = mejs.html5media.events;
 
-						if (eventName === 'loadedmetadata') {
-							dashPlayer.initialize(node, node.src, false);
-						}
+                const dashEvents = dashjs.MediaPlayer.events;
 
-						node.addEventListener(eventName, function (e) {
-							// copy event
+                const assignEvents = eventName => {
 
-							var event = doc.createEvent('HTMLEvents');
-							event.initEvent(e.type, e.bubbles, e.cancelable);
-							event.srcElement = e.srcElement;
-							event.target = e.srcElement;
+                    if (eventName === 'loadedmetadata') {
+                        dashPlayer.initialize(node, node.src, false);
+                    }
 
-							mediaElement.dispatchEvent(event);
-						});
+                    node.addEventListener(eventName, e => {
+                        // copy event
 
-					}
-				;
+                        const event = doc.createEvent('HTMLEvents');
+                        event.initEvent(e.type, e.bubbles, e.cancelable);
+                        event.srcElement = e.srcElement;
+                        event.target = e.srcElement;
 
-				events = events.concat(['click', 'mouseover', 'mouseout']);
+                        mediaElement.dispatchEvent(event);
+                    });
 
-				for (i = 0, il = events.length; i < il; i++) {
+                };
+
+                events = events.concat(['click', 'mouseover', 'mouseout']);
+
+                for (i = 0, il = events.length; i < il; i++) {
 					assignEvents(events[i]);
 				}
 
-				/**
+                /**
 				 * Custom M(PEG)-DASH events
 				 *
 				 * These events can be attached to the original node using addEventListener and the name of the event,
 				 * not using dashjs.MediaPlayer.events object
 				 * @see http://cdn.dashjs.org/latest/jsdoc/MediaPlayerEvents.html
 				 */
-				var assignMdashEvents = function (e, data) {
-					var event = mejs.Utils.createEvent(e, node);
+                const assignMdashEvents = (e, data) => {
+					const event = mejs.Utils.createEvent(e, node);
 					mediaElement.dispatchEvent(event);
 
 					if (e === 'error') {
 						console.error(e, data);
 					}
 				};
-				for (var eventType in dashEvents) {
+                for (const eventType in dashEvents) {
 					if (dashEvents.hasOwnProperty(eventType)) {
 						dashPlayer.on(dashEvents[eventType], assignMdashEvents);
 					}
 				}
-			};
+            };
 
-			var filteredAttributes = ['id', 'src', 'style'];
-			for (var j = 0, total = originalNode.attributes.length; j < total; j++) {
-				var attribute = originalNode.attributes[j];
+            const filteredAttributes = ['id', 'src', 'style'];
+            for (let j = 0, total = originalNode.attributes.length; j < total; j++) {
+				const attribute = originalNode.attributes[j];
 				if (attribute.specified && filteredAttributes.indexOf(attribute.name) === -1) {
 					node.setAttribute(attribute.name, attribute.value);
 				}
 			}
 
-			node.setAttribute('id', id);
+            node.setAttribute('id', id);
 
-			if (mediaFiles && mediaFiles.length > 0) {
+            if (mediaFiles && mediaFiles.length > 0) {
 				for (i = 0, il = mediaFiles.length; i < il; i++) {
 					if (mejs.Renderers.renderers[options.prefix].canPlayType(mediaFiles[i].type)) {
 						node.setAttribute('src', mediaFiles[i].src);
@@ -277,43 +272,43 @@
 				}
 			}
 
-			node.className = '';
+            node.className = '';
 
-			originalNode.parentNode.insertBefore(node, originalNode);
-			originalNode.removeAttribute('autoplay');
-			originalNode.style.display = 'none';
+            originalNode.parentNode.insertBefore(node, originalNode);
+            originalNode.removeAttribute('autoplay');
+            originalNode.style.display = 'none';
 
-			NativeDash.prepareSettings({
+            NativeDash.prepareSettings({
 				options: options.dash,
 				id: id
 			});
 
-			// HELPER METHODS
-			node.setSize = function (width, height) {
-				node.style.width = width + 'px';
-				node.style.height = height + 'px';
+            // HELPER METHODS
+            node.setSize = (width, height) => {
+				node.style.width = `${width}px`;
+				node.style.height = `${height}px`;
 
 				return node;
 			};
 
-			node.hide = function () {
+            node.hide = () => {
 				node.pause();
 				node.style.display = 'none';
 				return node;
 			};
 
-			node.show = function () {
+            node.show = () => {
 				node.style.display = '';
 				return node;
 			};
 
-			var event = mejs.Utils.createEvent('rendererready', node);
-			mediaElement.dispatchEvent(event);
+            const event = mejs.Utils.createEvent('rendererready', node);
+            mediaElement.dispatchEvent(event);
 
-			return node;
-		}
+            return node;
+        }
 	};
 
 	mejs.Renderers.add(DashNativeRenderer);
 
-})(window, document, window.mejs || {});
+}))(window, document, window.mejs || {});

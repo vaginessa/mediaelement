@@ -4,9 +4,9 @@
  * Include translations from JS files and method to pluralize properly strings.
  *
  */
-(function (doc, win, mejs, undefined) {
+(((doc, win, mejs, undefined) => {
 
-	var i18n = {
+	const i18n = {
 		/**
 		 * @type {String}
 		 */
@@ -38,8 +38,8 @@
 			// 0: Chinese, Japanese, Korean, Persian, Turkish, Thai, Lao, Aymará,
 			// Tibetan, Chiga, Dzongkha, Indonesian, Lojban, Georgian, Kazakh, Khmer, Kyrgyz, Malay,
 			// Burmese, Yakut, Sundanese, Tatar, Uyghur, Vietnamese, Wolof
-			function () {
-				return arguments[1];
+			function(...args) {
+				return args[1];
 			},
 			// 1: Danish, Dutch, English, Faroese, Frisian, German, Norwegian, Swedish, Estonian, Finnish,
 			// Hungarian, Basque, Greek, Hebrew, Italian, Portuguese, Spanish, Catalan, Afrikaans,
@@ -51,7 +51,7 @@
 			// Piemontese, Pashto, Romansh, Kinyarwanda, Santali, Scots, Sindhi, Northern Sami, Sinhala,
 			// Somali, Songhay, Albanian, Swahili, Tamil, Telugu, Turkmen, Urdu, Yoruba
 			function () {
-				var args = arguments;
+				const args = arguments;
 				if (args[0] === 1) {
 					return args[1];
 				} else {
@@ -61,7 +61,7 @@
 			// 2: French, Brazilian Portuguese, Acholi, Akan, Amharic, Mapudungun, Breton, Filipino,
 			// Gun, Lingala, Mauritian Creole, Malagasy, Maori, Occitan, Tajik, Tigrinya, Uzbek, Walloon
 			function () {
-				var args = arguments;
+				const args = arguments;
 				if ([0, 1].indexOf(args[0]) > -1) {
 					return args[1];
 				} else {
@@ -70,7 +70,7 @@
 			},
 			// 3: Latvian
 			function () {
-				var args = arguments;
+				const args = arguments;
 				if (args[0] % 10 === 1 && args[0] % 100 !== 11) {
 					return args[1];
 				} else if (args[0] !== 0) {
@@ -81,7 +81,7 @@
 			},
 			// 4: Scottish Gaelic
 			function () {
-				var args = arguments;
+				const args = arguments;
 				if (args[0] === 1 || args[0] === 11) {
 					return args[1];
 				} else if (args[0] === 2 || args[0] === 12) {
@@ -92,8 +92,7 @@
 					return args[4];
 				}
 			},
-			// 5:  Romanian
-			function () {
+			() => {
 				if (args[0] === 1) {
 					return args[1];
 				} else if (args[0] === 0 || (args[0] % 100 > 0 && args[0] % 100 < 20)) {
@@ -104,7 +103,7 @@
 			},
 			// 6: Lithuanian
 			function () {
-				var args = arguments;
+				const args = arguments;
 				if (args[0] % 10 === 1 && args[0] % 100 !== 11) {
 					return args[1];
 				} else if (args[0] % 10 >= 2 && (args[0] % 100 < 10 || args[0] % 100 >= 20)) {
@@ -115,7 +114,7 @@
 			},
 			// 7: Belarusian, Bosnian, Croatian, Serbian, Russian, Ukrainian
 			function () {
-				var args = arguments;
+				const args = arguments;
 				if (args[0] % 10 === 1 && args[0] % 100 !== 11) {
 					return args[1];
 				} else if (args[0] % 10 >= 2 && args[0] % 10 <= 4 && (args[0] % 100 < 10 || args[0] % 100 >= 20)) {
@@ -126,7 +125,7 @@
 			},
 			// 8:  Slovak, Czech
 			function () {
-				var args = arguments;
+				const args = arguments;
 				if (args[0] === 1) {
 					return args[1];
 				} else if (args[0] >= 2 && args[0] <= 4) {
@@ -137,7 +136,7 @@
 			},
 			// 9: Polish
 			function () {
-				var args = arguments;
+				const args = arguments;
 				if (args[0] === 1) {
 					return args[1];
 				} else if (args[0] % 10 >= 2 && args[0] % 10 <= 4 && (args[0] % 100 < 10 || args[0] % 100 >= 20)) {
@@ -148,7 +147,7 @@
 			},
 			// 10: Slovenian
 			function () {
-				var args = arguments;
+				const args = arguments;
 				if (args[0] % 100 === 1) {
 					return args[2];
 				} else if (args[0] % 100 === 2) {
@@ -161,7 +160,7 @@
 			},
 			// 11: Irish Gaelic
 			function () {
-				var args = arguments;
+				const args = arguments;
 				if (args[0] === 1) {
 					return args[1];
 				} else if (args[0] === 2) {
@@ -176,7 +175,7 @@
 			},
 			// 12: Arabic
 			function () {
-				var args = arguments;
+				const args = arguments;
 				if (args[0] === 0) {
 					return args[1];
 				} else if (args[0] === 1) {
@@ -193,7 +192,7 @@
 			},
 			// 13: Maltese
 			function () {
-				var args = arguments;
+				const args = arguments;
 				if (args[0] === 1) {
 					return args[1];
 				} else if (args[0] === 0 || (args[0] % 100 > 1 && args[0] % 100 < 11)) {
@@ -207,7 +206,7 @@
 			},
 			// 14: Macedonian
 			function () {
-				var args = arguments;
+				const args = arguments;
 				if (args[0] % 10 === 1) {
 					return args[1];
 				} else if (args[0] % 10 === 2) {
@@ -218,7 +217,7 @@
 			},
 			// 15:  Icelandic
 			function () {
-				var args = arguments;
+				const args = arguments;
 				if (args[0] !== 11 && args[0] % 10 === 1) {
 					return args[1];
 				} else {
@@ -231,7 +230,7 @@
 			// Note: in https://developer.mozilla.org/en-US/docs/Mozilla/Localization/Localization_and_Plurals#List_of_Plural_Rules
 			// Breton is listed as #16 but in the Localization Guide it belongs to the group 2
 			function () {
-				var args = arguments;
+				const args = arguments;
 				if (args[0] === 1) {
 					return args[1];
 				} else if (args[0] % 10 >= 2 && args[0] % 10 <= 4 && (args[0] % 100 < 10 || args[0] % 100 >= 20)) {
@@ -242,7 +241,7 @@
 			},
 			// 17:  Welsh
 			function () {
-				var args = arguments;
+				const args = arguments;
 				if (args[0] === 1) {
 					return args[1];
 				} else if (args[0] === 2) {
@@ -255,7 +254,7 @@
 			},
 			// 18:  Javanese
 			function () {
-				var args = arguments;
+				const args = arguments;
 				if (args[0] === 0) {
 					return args[1];
 				} else {
@@ -264,7 +263,7 @@
 			},
 			// 19:  Cornish
 			function () {
-				var args = arguments;
+				const args = arguments;
 				if (args[0] === 1) {
 					return args[1];
 				} else if (args[0] === 2) {
@@ -277,7 +276,7 @@
 			},
 			// 20:  Mandinka
 			function () {
-				var args = arguments;
+				const args = arguments;
 				if (args[0] === 0) {
 					return args[1];
 				} else if (args[0] === 1) {
@@ -291,8 +290,8 @@
 		 * Get specified language
 		 *
 		 */
-		getLanguage: function () {
-			var language = i18n.locale.language || i18n['default'];
+		getLanguage(...args) {
+			const language = i18n.locale.language || i18n['default'];
 			return /^(x\-)?[a-z]{2,}(\-\w{2,})?(\-\w{2,})?$/.exec(language) ? language : i18n['default'];
 		},
 
@@ -303,58 +302,55 @@
 		 * @param {Number} pluralParam
 		 * @return {String}
 		 */
-		t: function (message, pluralParam) {
+		t(message, pluralParam) {
 
 			if (typeof message === 'string' && message.length) {
+                const language = i18n.getLanguage();
+                let str;
+                let pluralForm;
 
-				var
-					language = i18n.getLanguage(),
-					str,
-					pluralForm,
-					/**
-					 * Modify string using algorithm to detect plural forms.
-					 *
-					 * @private
-					 * @see http://stackoverflow.com/questions/1353408/messageformat-in-javascript-parameters-in-localized-ui-strings
-					 * @param {String|String[]} input   - String or array of strings to pick the plural form
-					 * @param {Number} number           - Number to determine the proper plural form
-					 * @param {Number} form             - Number of language family to apply plural form
-					 * @return {String}
-					 */
-					plural = function (input, number, form) {
+                const /**
+             * Modify string using algorithm to detect plural forms.
+             *
+             * @private
+             * @see http://stackoverflow.com/questions/1353408/messageformat-in-javascript-parameters-in-localized-ui-strings
+             * @param {String|String[]} input   - String or array of strings to pick the plural form
+             * @param {Number} number           - Number to determine the proper plural form
+             * @param {Number} form             - Number of language family to apply plural form
+             * @return {String}
+             */
+                plural = (input, number, form) => {
 
-						if (typeof input !== 'object' || typeof number !== 'number' || typeof form !== 'number') {
-							return input;
-						}
+                    if (typeof input !== 'object' || typeof number !== 'number' || typeof form !== 'number') {
+                        return input;
+                    }
 
-						if (typeof input === 'string') {
-							return input;
-						}
+                    if (typeof input === 'string') {
+                        return input;
+                    }
 
-						// Perform plural form or return original text
-						return i18n.pluralForms[form].apply(null, [number].concat(input));
-					},
-					/**
-					 *
-					 * @param {String} input
-					 * @return {String}
-					 */
-					escapeHTML = function (input) {
-						var map = {
-							'&': '&amp;',
-							'<': '&lt;',
-							'>': '&gt;',
-							'"': '&quot;'
-						};
+                    // Perform plural form or return original text
+                    return i18n.pluralForms[form].apply(null, [number].concat(input));
+                };
 
-						return input.replace(/[&<>"]/g, function(c) {
-							return map[c];
-						});
-					}
-					;
+                const /**
+             *
+             * @param {String} input
+             * @return {String}
+             */
+                escapeHTML = input => {
+                    const map = {
+                        '&': '&amp;',
+                        '<': '&lt;',
+                        '>': '&gt;',
+                        '"': '&quot;'
+                    };
 
-				// Fetch the localized version of the string
-				if (i18n.locale.strings && i18n.locale.strings[language]) {
+                    return input.replace(/[&<>"]/g, c => map[c]);
+                };
+
+                // Fetch the localized version of the string
+                if (i18n.locale.strings && i18n.locale.strings[language]) {
 					str = i18n.locale.strings[language][message];
 					if (typeof pluralParam === 'number') {
 						pluralForm = i18n.locale.strings[language]['mejs.plural-form'];
@@ -362,8 +358,8 @@
 					}
 				}
 
-				// Fallback to default language if requested uid is not translated
-				if (!str && i18n.locale.strings && i18n.locale.strings[i18n['default']]) {
+                // Fallback to default language if requested uid is not translated
+                if (!str && i18n.locale.strings && i18n.locale.strings[i18n['default']]) {
 					str = i18n.locale.strings[i18n['default']][message];
 					if (typeof pluralParam === 'number') {
 						pluralForm = i18n.locale.strings[i18n['default']]['mejs.plural-form'];
@@ -372,17 +368,16 @@
 					}
 				}
 
-				// As a last resort, use the requested uid, to mimic original behavior of i18n utils (in which uid was the english text)
-				str = str || message;
+                // As a last resort, use the requested uid, to mimic original behavior of i18n utils (in which uid was the english text)
+                str = str || message;
 
-				// Replace token
-				if (typeof pluralParam === 'number') {
+                // Replace token
+                if (typeof pluralParam === 'number') {
 					str = str.replace('%1', pluralParam);
 				}
 
-				return escapeHTML(str);
-
-			}
+                return escapeHTML(str);
+            }
 
 			return message;
 		}
@@ -398,15 +393,11 @@
 	mejs.i18n = i18n;
 
 
-}(document, window, mejs));
+})(document, window, mejs));
 
 // i18n fixes for compatibility with WordPress
-;(function (mejs, undefined) {
-
-	"use strict";
-
-	if (typeof mejsL10n !== 'undefined') {
+;(((mejs, undefined) => {
+    if (typeof mejsL10n !== 'undefined') {
 		mejs[mejsL10n.lang] = mejsL10n.strings;
 	}
-
-}(mejs.i18n.locale.strings));
+})(mejs.i18n.locale.strings));

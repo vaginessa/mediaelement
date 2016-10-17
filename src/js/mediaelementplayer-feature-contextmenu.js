@@ -4,13 +4,13 @@
 *
 */
 
-(function($) {
+(($ => {
 
 $.extend(mejs.MepDefaults,
 	{ 'contextMenuItems': [
 		// demo of a fullscreen option
 		{ 
-			render: function(player) {
+			render(player) {
 				
 				// check for fullscreen plugin
 				if (player.enterFullScreen === undefined)
@@ -22,7 +22,7 @@ $.extend(mejs.MepDefaults,
 					return mejs.i18n.t('mejs.fullscreen-on');
 				}
 			},
-			click: function(player) {
+			click(player) {
 				if (player.isFullScreen) {
 					player.exitFullScreen();
 				} else {
@@ -32,14 +32,14 @@ $.extend(mejs.MepDefaults,
 		},
 		// demo of a mute/unmute button
 		{ 
-			render: function(player) {
+			render(player) {
 				if (player.media.muted) {
 					return mejs.i18n.t('mejs.unmute');
 				} else {
 					return mejs.i18n.t('mejs.mute');
 				}
 			},
-			click: function(player) {
+			click(player) {
 				if (player.media.muted) {
 					player.setMuted(false);
 				} else {
@@ -53,10 +53,10 @@ $.extend(mejs.MepDefaults,
 		},
 		// demo of simple download video
 		{ 
-			render: function(player) {
+			render(player) {
 				return mejs.i18n.t('mejs.download-video');
 			},
-			click: function(player) {
+			click(player) {
 				window.location.href = player.media.currentSrc;
 			}
 		}	
@@ -65,7 +65,7 @@ $.extend(mejs.MepDefaults,
 
 
 	$.extend(MediaElementPlayer.prototype, {
-		buildcontextmenu: function(player, controls, layers, media) {
+		buildcontextmenu(player, controls, layers, media) {
 			
 			// create context menu
 			player.contextMenu = $('<div class="mejs-contextmenu"></div>')
@@ -73,17 +73,17 @@ $.extend(mejs.MepDefaults,
 								.hide();
 			
 			// create events for showing context menu
-			player.container.bind('contextmenu', function(e) {
+			player.container.bind('contextmenu', e => {
 				if (player.isContextMenuEnabled) {
 					e.preventDefault();
 					player.renderContextMenu(e.clientX-1, e.clientY-1);
 					return false;
 				}
 			});
-			player.container.bind('click', function() {
+			player.container.bind('click', () => {
 				player.contextMenu.hide();
 			});	
-			player.contextMenu.bind('mouseleave', function() {
+			player.contextMenu.bind('mouseleave', () => {
 
 				//console.log('context hover out');
 				player.startContextMenuTimer();
@@ -91,33 +91,33 @@ $.extend(mejs.MepDefaults,
 			});		
 		},
 
-		cleancontextmenu: function(player) {
+		cleancontextmenu(player) {
 			player.contextMenu.remove();
 		},
 		
 		isContextMenuEnabled: true,
-		enableContextMenu: function() {
+		enableContextMenu(...args) {
 			this.isContextMenuEnabled = true;
 		},
-		disableContextMenu: function() {
+		disableContextMenu(...args) {
 			this.isContextMenuEnabled = false;
 		},
 		
 		contextMenuTimeout: null,
-		startContextMenuTimer: function() {
+		startContextMenuTimer(...args) {
 			//console.log('startContextMenuTimer');
 			
-			var t = this;
+			const t = this;
 			
 			t.killContextMenuTimer();
 			
-			t.contextMenuTimer = setTimeout(function() {
+			t.contextMenuTimer = setTimeout(() => {
 				t.hideContextMenu();
 				t.killContextMenuTimer();
 			}, 750);
 		},
-		killContextMenuTimer: function() {
-			var timer = this.contextMenuTimer;
+		killContextMenuTimer(...args) {
+			let timer = this.contextMenuTimer;
 			
 			//console.log('killContextMenuTimer', timer);
 			
@@ -127,68 +127,67 @@ $.extend(mejs.MepDefaults,
 			}
 		},		
 		
-		hideContextMenu: function() {
+		hideContextMenu(...args) {
 			this.contextMenu.hide();
 		},
 		
-		renderContextMenu: function(x,y) {
-			
-			// alway re-render the items so that things like "turn fullscreen on" and "turn fullscreen off" are always written correctly
-			var t = this,
-				html = '',
-				items = t.options.contextMenuItems;
-			
-			for (var i=0, il=items.length; i<il; i++) {
+		renderContextMenu(x, y) {
+            // alway re-render the items so that things like "turn fullscreen on" and "turn fullscreen off" are always written correctly
+            const t = this;
+
+            let html = '';
+            const items = t.options.contextMenuItems;
+
+            for (let i=0, il=items.length; i<il; i++) {
 				
 				if (items[i].isSeparator) {
 					html += '<div class="mejs-contextmenu-separator"></div>';
 				} else {
 				
-					var rendered = items[i].render(t);
+					const rendered = items[i].render(t);
 				
 					// render can return null if the item doesn't need to be used at the moment
 					if (rendered !== null && rendered !== undefined) {
-						html += '<div class="mejs-contextmenu-item" data-itemindex="' + i + '" id="element-' + (Math.random()*1000000) + '">' + rendered + '</div>';
+						html += `<div class="mejs-contextmenu-item" data-itemindex="${i}" id="element-${Math.random()*1000000}">${rendered}</div>`;
 					}
 				}
 			}
-			
-			// position and show the context menu
-			t.contextMenu
+
+            // position and show the context menu
+            t.contextMenu
 				.empty()
 				.append($(html))
 				.css({top:y, left:x})
 				.show();
-				
-			// bind events
-			t.contextMenu.find('.mejs-contextmenu-item').each(function() {
-							
-				// which one is this?
-				var $dom = $(this),
-					itemIndex = parseInt( $dom.data('itemindex'), 10 ),
-					item = t.options.contextMenuItems[itemIndex];
-				
-				// bind extra functionality?
-				if (typeof item.show != 'undefined')
+
+            // bind events
+            t.contextMenu.find('.mejs-contextmenu-item').each(function(...args) {
+                // which one is this?
+                const $dom = $(this);
+
+                const itemIndex = parseInt( $dom.data('itemindex'), 10 );
+                const item = t.options.contextMenuItems[itemIndex];
+
+                // bind extra functionality?
+                if (typeof item.show != 'undefined')
 					item.show( $dom , t);
-				
-				// bind click action
-				$dom.click(function() {			
+
+                // bind click action
+                $dom.click(() => {			
 					// perform click action
 					if (typeof item.click != 'undefined')
 						item.click(t);
 					
 					// close
 					t.contextMenu.hide();				
-				});				
-			});	
-			
-			// stop the controls from hiding
-			setTimeout(function() {
+				});
+            });
+
+            // stop the controls from hiding
+            setTimeout(() => {
 				t.killControlsTimer('rev3');	
 			}, 100);
-						
-		}
+        }
 	});
 	
-})(mejs.$);
+}))(mejs.$);

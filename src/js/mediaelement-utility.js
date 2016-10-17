@@ -4,7 +4,7 @@
  * This file contains global functions and polyfills needed to support old browsers.
  *
  */
-(function (win, doc, mejs, undefined) {
+(((win, doc, mejs, undefined) => {
 
 	/**
 	 * @class {mejs.Utility}
@@ -23,21 +23,19 @@
 		 * @param {Function} onGet
 		 * @param {Function} onSet
 		 */
-		addProperty: function (obj, name, onGet, onSet) {
+		addProperty(obj, name, onGet, onSet) {
+            // wrapper functions
+            let oldValue = obj[name];
 
-			// wrapper functions
-			var
-				oldValue = obj[name],
-				getFn = function () {
-					return onGet.apply(obj, [oldValue]);
-				},
-				setFn = function (newValue) {
-					oldValue = onSet.apply(obj, [newValue]);
-					return oldValue;
-				};
+            const getFn = () => onGet.apply(obj, [oldValue]);
 
-			// Modern browsers, IE9+ (IE8 only works on DOM objects, not normal JS objects)
-			if (Object.defineProperty) {
+            const setFn = newValue => {
+                oldValue = onSet.apply(obj, [newValue]);
+                return oldValue;
+            };
+
+            // Modern browsers, IE9+ (IE8 only works on DOM objects, not normal JS objects)
+            if (Object.defineProperty) {
 
 				Object.defineProperty(obj, name, {
 					get: getFn,
@@ -54,7 +52,7 @@
 				// must be a real DOM object (to have attachEvent) and must be attached to document (for onpropertychange to fire)
 			} else {
 
-				var onPropertyChange = function (event) {
+				const onPropertyChange = event => {
 
 					//console.log('onPropertyChange', event.propertyName);
 
@@ -64,13 +62,11 @@
 						obj.detachEvent('onpropertychange', onPropertyChange);
 
 						// get the changed value, run it through the set function
-						var newValue = setFn(obj[name]);
+						const newValue = setFn(obj[name]);
 
 						// restore the get function
 						obj[name] = getFn;
-						obj[name].toString = function () {
-							return getFn().toString();
-						};
+						obj[name].toString = () => getFn().toString();
 
 						// restore the event
 						obj.attachEvent('onpropertychange', onPropertyChange);
@@ -79,9 +75,7 @@
 
 				try {
 					obj[name] = getFn;
-					obj[name].toString = function () {
-						return getFn().toString();
-					};
+					obj[name].toString = () => getFn().toString();
 				} catch (ex) {
 					console.log('ERROR adding', name);
 				}
@@ -89,7 +83,7 @@
 				// add the property event change only once
 				obj.attachEvent('onpropertychange', onPropertyChange);
 			}
-		},
+        },
 
 		/**
 		 *
@@ -97,8 +91,8 @@
 		 * @param {HTMLElement} target
 		 * @return {Object}
 		 */
-		createEvent: function (eventName, target) {
-			var event = null;
+		createEvent(eventName, target) {
+			let event = null;
 
 			if (doc.createEvent) {
 				event = doc.createEvent('Event');
@@ -123,7 +117,7 @@
 		 * @param {String} type
 		 * @return {String}
 		 */
-		getMimeFromType: function (type) {
+		getMimeFromType(type) {
 			if (type && ~type.indexOf(';')) {
 				return type.substr(0, type.indexOf(';'));
 			} else {
@@ -138,7 +132,7 @@
 		 * @param {String} type
 		 * @return {String}
 		 */
-		formatType: function (url, type) {
+		formatType(url, type) {
 
 			// if no type is supplied, fake it with the extension
 			if (url && !type) {
@@ -154,12 +148,11 @@
 		 * @param {String} url
 		 * @return {String}
 		 */
-		getTypeFromFile: function (url) {
+		getTypeFromFile(url) {
+            let type = null;
 
-			var type = null;
-
-			// do type checks first
-			for (var i = 0, il = this.typeChecks.length; i < il; i++) {
+            // do type checks first
+            for (let i = 0, il = this.typeChecks.length; i < il; i++) {
 				type = this.typeChecks[i](url);
 
 				if (type !== null) {
@@ -167,14 +160,15 @@
 				}
 			}
 
-			// the do standard extension check
-			var ext = this.getExtension(url),
-				normalizedExt = this.normalizeExtension(ext);
+            // the do standard extension check
+            const ext = this.getExtension(url);
 
-			type = (/(mp4|m4v|ogg|ogv|webm|webmv|flv|wmv|mpeg|mov)/gi.test(ext) ? 'video' : 'audio') + '/' + normalizedExt;
+            const normalizedExt = this.normalizeExtension(ext);
 
-			return type;
-		},
+            type = `${/(mp4|m4v|ogg|ogv|webm|webmv|flv|wmv|mpeg|mov)/gi.test(ext) ? 'video' : 'audio'}/${normalizedExt}`;
+
+            return type;
+        },
 
 		/**
 		 * Get media file extension from URL
@@ -182,12 +176,12 @@
 		 * @param {String} url
 		 * @return {String}
 		 */
-		getExtension: function (url) {
-			var withoutQuerystring = url.split('?')[0],
-				ext = ~withoutQuerystring.indexOf('.') ? withoutQuerystring.substring(withoutQuerystring.lastIndexOf('.') + 1) : '';
+		getExtension(url) {
+            const withoutQuerystring = url.split('?')[0];
+            const ext = ~withoutQuerystring.indexOf('.') ? withoutQuerystring.substring(withoutQuerystring.lastIndexOf('.') + 1) : '';
 
-			return ext;
-		},
+            return ext;
+        },
 
 		/**
 		 * Get standard extension of a media file
@@ -195,7 +189,7 @@
 		 * @param {String} extension
 		 * @return {String}
 		 */
-		normalizeExtension: function (extension) {
+		normalizeExtension(extension) {
 
 			switch (extension) {
 				case 'mp4':
@@ -219,7 +213,7 @@
 		 * @param {String} url
 		 * @return {String}
 		 */
-		encodeUrl: function (url) {
+		encodeUrl(url) {
 			return encodeURIComponent(url); //.replace(/\?/gi,'%3F').replace(/=/gi,'%3D').replace(/&/gi,'%26');
 		},
 
@@ -228,7 +222,7 @@
 		 * @param {String} output
 		 * @return {string}
 		 */
-		escapeHTML: function (output) {
+		escapeHTML(output) {
 			return output.toString().split('&').join('&amp;').split('<').join('&lt;').split('"').join('&quot;');
 		},
 
@@ -237,9 +231,9 @@
 		 * @param {String} url
 		 * @return {String}
 		 */
-		absolutizeUrl: function (url) {
-			var el = doc.createElement('div');
-			el.innerHTML = '<a href="' + this.escapeHTML(url) + '">x</a>';
+		absolutizeUrl(url) {
+			const el = doc.createElement('div');
+			el.innerHTML = `<a href="${this.escapeHTML(url)}">x</a>`;
 			return el.firstChild.href;
 		},
 
@@ -252,26 +246,25 @@
 		 * @param {number} fps - Frames per second
 		 * @return {String}
 		 */
-		secondsToTimeCode: function (time, forceHours, showFrameCount, fps) {
-			//add framecount
-			if (showFrameCount === undefined) {
+		secondsToTimeCode(time, forceHours, showFrameCount, fps) {
+            //add framecount
+            if (showFrameCount === undefined) {
 				showFrameCount = false;
 			} else if (fps === undefined) {
 				fps = 25;
 			}
 
-			var hours = Math.floor(time / 3600) % 24,
-				minutes = Math.floor(time / 60) % 60,
-				seconds = Math.floor(time % 60),
-				frames = Math.floor(((time % 1) * fps).toFixed(3)),
-				result =
-					( (forceHours || hours > 0) ? (hours < 10 ? '0' + hours : hours) + ':' : '') +
-					(minutes < 10 ? '0' + minutes : minutes) + ':' +
-					(seconds < 10 ? '0' + seconds : seconds) +
-					((showFrameCount) ? ':' + (frames < 10 ? '0' + frames : frames) : '');
+            const hours = Math.floor(time / 3600) % 24;
+            const minutes = Math.floor(time / 60) % 60;
+            const seconds = Math.floor(time % 60);
+            const frames = Math.floor(((time % 1) * fps).toFixed(3));
 
-			return result;
-		},
+            const result =
+                `${( (forceHours || hours > 0) ? (hours < 10 ? '0' + hours : hours) + ':' : '') +
+(minutes < 10 ? '0' + minutes : minutes)}:${seconds < 10 ? '0' + seconds : seconds}${(showFrameCount) ? ':' + (frames < 10 ? '0' + frames : frames) : ''}`;
+
+            return result;
+        },
 
 		/**
 		 * Convert a '00:00:00' tiem string into seconds
@@ -282,24 +275,25 @@
 		 * @param {number} fps - Frames per second
 		 * @return {number}
 		 */
-		timeCodeToSeconds: function (time, forceHours, showFrameCount, fps) {
-			if (showFrameCount === undefined) {
+		timeCodeToSeconds(time, forceHours, showFrameCount, fps) {
+            if (showFrameCount === undefined) {
 				showFrameCount = false;
 			} else if (fps === undefined) {
 				fps = 25;
 			}
 
-			// 00:00:00		HH:MM:SS
-			// 00:00 		MM:SS
-			// 00			SS
+            // 00:00:00		HH:MM:SS
+            // 00:00 		MM:SS
+            // 00			SS
 
-			var parts = time.split(':'),
-				hours = 0,
-				minutes = 0,
-				frames = 0,
-				seconds = 0;
+            const parts = time.split(':');
 
-			switch (parts.length) {
+            let hours = 0;
+            let minutes = 0;
+            let frames = 0;
+            let seconds = 0;
+
+            switch (parts.length) {
 				default:
 				case 1:
 					seconds = parseInt(parts[0], 10);
@@ -319,31 +313,35 @@
 
 			}
 
-			seconds = ( hours * 3600 ) + ( minutes * 60 ) + seconds + frames;
+            seconds = ( hours * 3600 ) + ( minutes * 60 ) + seconds + frames;
 
-			return seconds;
-		},
+            return seconds;
+        },
 
 		/**
 		 * Merge the contents of two or more objects together into the first object
 		 *
 		 * @return {Object}
 		 */
-		extend: function () {
-			// borrowed from ender
-			var options, name, src, copy,
-				target = arguments[0] || {},
-				i = 1,
-				length = arguments.length;
+		extend(...args) {
+            // borrowed from ender
+            let options;
 
-			// Handle case when target is a string or something (possible in deep copy)
-			if (typeof target !== "object" && typeof target !== "function") {
+            let name;
+            let src;
+            let copy;
+            let target = args[0] || {};
+            let i = 1;
+            const length = args.length;
+
+            // Handle case when target is a string or something (possible in deep copy)
+            if (typeof target !== "object" && typeof target !== "function") {
 				target = {};
 			}
 
-			for (; i < length; i++) {
+            for (; i < length; i++) {
 				// Only deal with non-null/undefined values
-				options = arguments[i];
+				options = args[i];
 				if (options !== null && options !== undefined) {
 					// Extend the base object
 					for (name in options) {
@@ -362,9 +360,9 @@
 				}
 			}
 
-			// Return the modified object
-			return target;
-		},
+            // Return the modified object
+            return target;
+        },
 
 		/**
 		 * Calculate the time format to use
@@ -375,45 +373,46 @@
 		 * @param {Object} options
 		 * @param {number} fps - Frames per second
 		 */
-		calculateTimeFormat: function (time, options, fps) {
-			if (time < 0) {
+		calculateTimeFormat(time, options, fps) {
+            if (time < 0) {
 				time = 0;
 			}
 
-			if (fps === undefined) {
+            if (fps === undefined) {
 				fps = 25;
 			}
 
-			var format = options.timeFormat,
-				firstChar = format[0],
-				firstTwoPlaces = (format[1] == format[0]),
-				separatorIndex = firstTwoPlaces ? 2 : 1,
-				separator = ':',
-				hours = Math.floor(time / 3600) % 24,
-				minutes = Math.floor(time / 60) % 60,
-				seconds = Math.floor(time % 60),
-				frames = Math.floor(((time % 1) * fps).toFixed(3)),
-				lis = [
-					[frames, 'f'],
-					[seconds, 's'],
-					[minutes, 'm'],
-					[hours, 'h']
-				];
+            let format = options.timeFormat;
+            let firstChar = format[0];
+            const firstTwoPlaces = (format[1] == format[0]);
+            const separatorIndex = firstTwoPlaces ? 2 : 1;
+            let separator = ':';
+            const hours = Math.floor(time / 3600) % 24;
+            const minutes = Math.floor(time / 60) % 60;
+            const seconds = Math.floor(time % 60);
+            const frames = Math.floor(((time % 1) * fps).toFixed(3));
 
-			// Try to get the separator from the format
-			if (format.length < separatorIndex) {
+            const lis = [
+                [frames, 'f'],
+                [seconds, 's'],
+                [minutes, 'm'],
+                [hours, 'h']
+            ];
+
+            // Try to get the separator from the format
+            if (format.length < separatorIndex) {
 				separator = format[separatorIndex];
 			}
 
-			var required = false;
+            let required = false;
 
-			for (var i = 0, len = lis.length; i < len; i++) {
+            for (let i = 0, len = lis.length; i < len; i++) {
 				if (format.indexOf(lis[i][1]) !== -1) {
 					required = true;
 				}
 				else if (required) {
-					var hasNextValue = false;
-					for (var j = i; j < len; j++) {
+					let hasNextValue = false;
+					for (let j = i; j < len; j++) {
 						if (lis[j][0] > 0) {
 							hasNextValue = true;
 							break;
@@ -434,8 +433,8 @@
 					firstChar = lis[i][1];
 				}
 			}
-			options.currentTimeFormat = format;
-		},
+            options.currentTimeFormat = format;
+        },
 
 		/**
 		 * Convert Society of Motion Picture and Television Engineers (SMTPE) time code into seconds
@@ -443,48 +442,49 @@
 		 * @param {String} SMPTE
 		 * @return {number}
 		 */
-		convertSMPTEtoSeconds: function (SMPTE) {
-			if (typeof SMPTE !== 'string')
+		convertSMPTEtoSeconds(SMPTE) {
+            if (typeof SMPTE !== 'string')
 				return false;
 
-			SMPTE = SMPTE.replace(',', '.');
+            SMPTE = SMPTE.replace(',', '.');
 
-			var secs = 0,
-				decimalLen = (SMPTE.indexOf('.') != -1) ? SMPTE.split('.')[1].length : 0,
-				multiplier = 1;
+            let secs = 0;
+            const decimalLen = (SMPTE.indexOf('.') != -1) ? SMPTE.split('.')[1].length : 0;
+            let multiplier = 1;
 
-			SMPTE = SMPTE.split(':').reverse();
+            SMPTE = SMPTE.split(':').reverse();
 
-			for (var i = 0; i < SMPTE.length; i++) {
+            for (let i = 0; i < SMPTE.length; i++) {
 				multiplier = 1;
 				if (i > 0) {
 					multiplier = Math.pow(60, i);
 				}
 				secs += Number(SMPTE[i]) * multiplier;
 			}
-			return Number(secs.toFixed(decimalLen));
-		},
+            return Number(secs.toFixed(decimalLen));
+        },
 		// taken from underscore
-		debounce: function (func, wait, immediate) {
-			var timeout;
+		debounce(func, wait, immediate) {
+			let timeout;
 			return function () {
-				var context = this, args = arguments;
-				var later = function () {
+                const context = this;
+                const args = arguments;
+                const later = () => {
 					timeout = null;
 					if (!immediate) func.apply(context, args);
 				};
-				var callNow = immediate && !timeout;
-				clearTimeout(timeout);
-				timeout = setTimeout(later, wait);
-				if (callNow) func.apply(context, args);
-			};
+                const callNow = immediate && !timeout;
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+                if (callNow) func.apply(context, args);
+            };
 		},
 		/**
 		 * Returns true if targetNode appears after sourceNode in the dom.
 		 * @param {HTMLElement} sourceNode - the source node for comparison
 		 * @param {HTMLElement} targetNode - the node to compare against sourceNode
 		 */
-		isNodeAfter: function (sourceNode, targetNode) {
+		isNodeAfter(sourceNode, targetNode) {
 			return !!(
 				sourceNode &&
 				targetNode &&
@@ -498,28 +498,27 @@
 	 * @class {mejs.MediaFeatures}
 	 * @class {mejs.Features}
 	 */
-	mejs.MediaFeatures = mejs.Features = (function () {
+	mejs.MediaFeatures = mejs.Features = ((() => {
+        const features = {};
+        const nav = win.navigator;
+        const ua = nav.userAgent.toLowerCase();
+        const html5Elements = ['source', 'track', 'audio', 'video'];
+        let video = null;
 
-		var features = {},
-			nav = win.navigator,
-			ua = nav.userAgent.toLowerCase(),
-			html5Elements = ['source', 'track', 'audio', 'video'],
-			video = null;
-
-		// for IE
-		for (var i = 0, il = html5Elements.length; i < il; i++) {
+        // for IE
+        for (let i = 0, il = html5Elements.length; i < il; i++) {
 			video = doc.createElement(html5Elements[i]);
 		}
 
-		features.isiPad = (ua.match(/ipad/i) !== null);
-		features.isiPhone = (ua.match(/iphone/i) !== null);
-		features.isiOS = features.isiPhone || features.isiPad;
-		features.isAndroid = (ua.match(/android/i) !== null);
-		features.isIE = (nav.appName.toLowerCase().indexOf("microsoft") != -1 || nav.appName.toLowerCase().match(/trident/gi) !== null);
-		features.isChrome = (ua.match(/chrome/gi) !== null);
-		features.isFirefox = (ua.match(/firefox/gi) !== null);
+        features.isiPad = (ua.match(/ipad/i) !== null);
+        features.isiPhone = (ua.match(/iphone/i) !== null);
+        features.isiOS = features.isiPhone || features.isiPad;
+        features.isAndroid = (ua.match(/android/i) !== null);
+        features.isIE = (nav.appName.toLowerCase().indexOf("microsoft") != -1 || nav.appName.toLowerCase().match(/trident/gi) !== null);
+        features.isChrome = (ua.match(/chrome/gi) !== null);
+        features.isFirefox = (ua.match(/firefox/gi) !== null);
 
-		/*
+        /*
 		 Possibly add back in when needed
 		 features.isSafari = ua.match(/safari/gi) !== null && !features.isChrome;
 		 features.isOpera = (ua.match(/opera/gi) !== null);
@@ -529,63 +528,61 @@
 
 		 */
 
-		// borrowed from Modernizr
-		features.hasTouch = ('ontouchstart' in win);
-		features.svg = !!doc.createElementNS && !!doc.createElementNS('http://www.w3.org/2000/svg', 'svg').createSVGRect;
+        // borrowed from Modernizr
+        features.hasTouch = ('ontouchstart' in win);
+        features.svg = !!doc.createElementNS && !!doc.createElementNS('http://www.w3.org/2000/svg', 'svg').createSVGRect;
 
-		features.supportsPointerEvents = (function () {
-			var
-				element = doc.createElement('x'),
-				documentElement = doc.documentElement,
-				getComputedStyle = win.getComputedStyle,
-				supports
-				;
+        features.supportsPointerEvents = ((() => {
+            const element = doc.createElement('x');
+            const documentElement = doc.documentElement;
+            const getComputedStyle = win.getComputedStyle;
+            let supports;
 
-			if (!('pointerEvents' in element.style)) {
+            if (!('pointerEvents' in element.style)) {
 				return false;
 			}
 
-			element.style.pointerEvents = 'auto';
-			element.style.pointerEvents = 'x';
-			documentElement.appendChild(element);
-			supports = getComputedStyle && getComputedStyle(element, '').pointerEvents === 'auto';
-			documentElement.removeChild(element);
-			return !!supports;
-		})();
+            element.style.pointerEvents = 'auto';
+            element.style.pointerEvents = 'x';
+            documentElement.appendChild(element);
+            supports = getComputedStyle && getComputedStyle(element, '').pointerEvents === 'auto';
+            documentElement.removeChild(element);
+            return !!supports;
+        }))();
 
 
-		// Older versions of Firefox can't move plugins around without it resetting,
-		features.hasFirefoxPluginMovingProblem = false;
+        // Older versions of Firefox can't move plugins around without it resetting,
+        features.hasFirefoxPluginMovingProblem = false;
 
-		// Detect native JavaScript fullscreen (Safari/Firefox only, Chrome still fails)
+        // Detect native JavaScript fullscreen (Safari/Firefox only, Chrome still fails)
 
-		// iOS
-		features.hasiOSFullScreen = (video.webkitEnterFullscreen !== undefined);
+        // iOS
+        features.hasiOSFullScreen = (video.webkitEnterFullscreen !== undefined);
 
-		// W3C
-		features.hasNativeFullscreen = (video.requestFullscreen !== undefined);
+        // W3C
+        features.hasNativeFullscreen = (video.requestFullscreen !== undefined);
 
-		// webkit/firefox/IE11+
-		features.hasWebkitNativeFullScreen = (video.webkitRequestFullScreen !== undefined);
-		features.hasMozNativeFullScreen = (video.mozRequestFullScreen !== undefined);
-		features.hasMsNativeFullScreen = (video.msRequestFullscreen !== undefined);
+        // webkit/firefox/IE11+
+        features.hasWebkitNativeFullScreen = (video.webkitRequestFullScreen !== undefined);
+        features.hasMozNativeFullScreen = (video.mozRequestFullScreen !== undefined);
+        features.hasMsNativeFullScreen = (video.msRequestFullscreen !== undefined);
 
-		features.hasTrueNativeFullScreen =
+        features.hasTrueNativeFullScreen =
 			(features.hasWebkitNativeFullScreen || features.hasMozNativeFullScreen || features.hasMsNativeFullScreen);
-		features.nativeFullScreenEnabled = features.hasTrueNativeFullScreen;
+        features.nativeFullScreenEnabled = features.hasTrueNativeFullScreen;
 
-		// Enabled?
-		if (features.hasMozNativeFullScreen) {
+        // Enabled?
+        if (features.hasMozNativeFullScreen) {
 			features.nativeFullScreenEnabled = doc.mozFullScreenEnabled;
 		} else if (features.hasMsNativeFullScreen) {
 			features.nativeFullScreenEnabled = doc.msFullscreenEnabled;
 		}
 
-		if (features.isChrome) {
+        if (features.isChrome) {
 			features.hasiOSFullScreen = false;
 		}
 
-		if (features.hasTrueNativeFullScreen) {
+        if (features.hasTrueNativeFullScreen) {
 
 			features.fullScreenEventName = '';
 			if (features.hasWebkitNativeFullScreen) {
@@ -598,7 +595,7 @@
 				features.fullScreenEventName = 'MSFullscreenChange';
 			}
 
-			features.isFullScreen = function () {
+			features.isFullScreen = () => {
 				if (features.hasMozNativeFullScreen) {
 					return doc.mozFullScreen;
 
@@ -610,7 +607,7 @@
 				}
 			};
 
-			features.requestFullScreen = function (el) {
+			features.requestFullScreen = el => {
 
 				if (features.hasWebkitNativeFullScreen) {
 					el.webkitRequestFullScreen();
@@ -621,7 +618,7 @@
 				}
 			};
 
-			features.cancelFullScreen = function () {
+			features.cancelFullScreen = () => {
 				if (features.hasWebkitNativeFullScreen) {
 					doc.webkitCancelFullScreen();
 
@@ -635,18 +632,18 @@
 			};
 		}
 
-		// OS X 10.5 can't do this even if it says it can :(
-		if (features.hasiOSFullScreen && ua.match(/mac os x 10_5/i)) {
+        // OS X 10.5 can't do this even if it says it can :(
+        if (features.hasiOSFullScreen && ua.match(/mac os x 10_5/i)) {
 			features.hasNativeFullScreen = false;
 			features.hasiOSFullScreen = false;
 		}
 
-		// Test if Media Source Extensions are supported by browser
-		features.hasMse = ('MediaSource' in win);
+        // Test if Media Source Extensions are supported by browser
+        features.hasMse = ('MediaSource' in win);
 
-		features.supportsMediaTag = (video.canPlayType !== undefined || features.hasMse);
+        features.supportsMediaTag = (video.canPlayType !== undefined || features.hasMse);
 
-		return features;
-	})();
+        return features;
+    }))();
 
-})(window, document, window.mejs || {});
+}))(window, document, window.mejs || {});

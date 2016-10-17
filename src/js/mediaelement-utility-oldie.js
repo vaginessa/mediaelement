@@ -4,7 +4,7 @@
 if (!Array.prototype.indexOf) {
 	Array.prototype.indexOf = function (searchElement, fromIndex) {
 
-		var k;
+		let k;
 
 		// 1. Let O be the result of calling ToObject passing
 		//	   the this value as the argument.
@@ -12,12 +12,12 @@ if (!Array.prototype.indexOf) {
 			throw new TypeError('"this" is null or not defined');
 		}
 
-		var O = Object(this);
+		const O = Object(this);
 
 		// 2. Let lenValue be the result of calling the Get
 		//	   internal method of O with the argument "length".
 		// 3. Let len be ToUint32(lenValue).
-		var len = O.length >>> 0;
+		const len = O.length >>> 0;
 
 		// 4. If len is 0, return -1.
 		if (len === 0) {
@@ -26,7 +26,7 @@ if (!Array.prototype.indexOf) {
 
 		// 5. If argument fromIndex was passed let n be
 		//	   ToInteger(fromIndex); else let n be 0.
-		var n = +fromIndex || 0;
+		let n = +fromIndex || 0;
 
 		if (Math.abs(n) == Infinity) {
 			n = 0;
@@ -68,9 +68,9 @@ if (!Array.prototype.indexOf) {
 // document.createEvent for IE8 or other old browsers that do not implement it
 // Reference: https://github.com/WebReflection/ie8/blob/master/build/ie8.max.js
 if (document.createEvent === undefined) {
-	document.createEvent = function (event) {
+	document.createEvent = event => {
 
-		var e;
+		let e;
 
 		e = document.createEventObject();
 		e.timeStamp = (new Date()).getTime();
@@ -83,7 +83,7 @@ if (document.createEvent === undefined) {
 			this.bubbles = !!bubbles;
 			this.cancelable = !!cancelable;
 			if (!this.bubbles) {
-				this.stopPropagation = function () {
+				this.stopPropagation = function(...args) {
 					this.stoppedPropagation = true;
 					this.cancelBubble = true;
 				};

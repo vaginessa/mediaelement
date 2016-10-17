@@ -9,7 +9,7 @@
  * on GA to send events properly.
  * @see https://developers.google.com/analytics/devguides/collection/analyticsjs/events
  */
-(function ($) {
+(($ => {
 
 	// Feature configuration
 	$.extend(mejs.MepDefaults, {
@@ -51,9 +51,9 @@
 		 * @param {$} layers
 		 * @param {HTMLElement} media
 		 */
-		buildgoogleanalytics: function (player, controls, layers, media) {
+		buildgoogleanalytics(player, controls, layers, media) {
 
-			media.addEventListener('play', function () {
+			media.addEventListener('play', () => {
 				if (typeof ga != 'undefined') {
 					ga('send', 'event',
 						player.options.googleAnalyticsCategory,
@@ -63,7 +63,7 @@
 				}
 			}, false);
 
-			media.addEventListener('pause', function () {
+			media.addEventListener('pause', () => {
 				if (typeof ga != 'undefined') {
 					ga('send', 'event',
 						player.options.googleAnalyticsCategory,
@@ -73,7 +73,7 @@
 				}
 			}, false);
 
-			media.addEventListener('ended', function () {
+			media.addEventListener('ended', () => {
 				if (typeof ga != 'undefined') {
 					ga('send', 'event',
 						player.options.googleAnalyticsCategory,
@@ -99,4 +99,4 @@
 		}
 	});
 
-})(mejs.$);
+}))(mejs.$);

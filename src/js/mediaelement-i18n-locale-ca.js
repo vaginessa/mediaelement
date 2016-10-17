@@ -12,10 +12,8 @@
  * @params
  *  - exports - CommonJS, window ..
  */
-(function (exports) {
-	"use strict";
-
-	if (exports.ca === undefined) {
+((exports => {
+    if (exports.ca === undefined) {
 		exports.ca = {
 			"mejs.plural-form": 1,
 
@@ -130,5 +128,5 @@
 			// "mejs.yiddish": "Yiddish"
 		};
 	}
-}(mejs.i18n.locale.strings));
+})(mejs.i18n.locale.strings));
 

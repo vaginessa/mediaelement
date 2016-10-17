@@ -4,7 +4,7 @@
  * This feature enables the displaying of a Stop button in the control bar, which basically pauses the media and rewinds
  * it to the initial position.
  */
-(function ($) {
+(($ => {
 
 	// Feature configuration
 	$.extend(mejs.MepDefaults, {
@@ -25,16 +25,13 @@
 		 * @param {$} layers
 		 * @param {HTMLElement} media
 		 */
-		buildstop: function (player, controls, layers, media) {
-			var
-				t = this,
-				stopTitle = t.options.stopText ? t.options.stopText : mejs.i18n.t('mejs.stop');
+		buildstop(player, controls, layers, media) {
+            const t = this;
+            const stopTitle = t.options.stopText ? t.options.stopText : mejs.i18n.t('mejs.stop');
 
-			$('<div class="mejs-button mejs-stop-button mejs-stop">' +
-				'<button type="button" aria-controls="' + t.id + '" title="' + stopTitle + '" aria-label="' + stopTitle + '"></button>' +
-				'</div>')
+            $(`<div class="mejs-button mejs-stop-button mejs-stop"><button type="button" aria-controls="${t.id}" title="${stopTitle}" aria-label="${stopTitle}"></button></div>`)
 			.appendTo(controls)
-			.click(function () {
+			.click(() => {
 				if (!media.paused) {
 					media.pause();
 				}
@@ -48,7 +45,7 @@
 					layers.find('.mejs-poster').show();
 				}
 			});
-		}
+        }
 	});
 
-})(mejs.$);
+}))(mejs.$);

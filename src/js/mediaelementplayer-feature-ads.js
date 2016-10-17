@@ -9,7 +9,7 @@
 // 2013/02/23		3.5		split into a generic pre-roll plugin
 
 
-(function($) {
+(($ => {
 
 	// on time insert into head
 	$('head').append($('<style>' + 
@@ -75,9 +75,9 @@
 		// true when the user clicks play for the first time, or if autoplay is set
 		adsPlayerHasStarted: false,
 		
-		buildads: function(player, controls, layers, media) {
+		buildads(player, controls, layers, media) {
 
-			var t = this;
+			const t = this;
 			
 			if (t.adsLoaded) {
 				return;
@@ -87,13 +87,7 @@
 				
 			// add layer for ad links and skipping
 			player.adsLayer = 
-					$('<div class="mejs-layer mejs-overlay mejs-ads">' + 
-							'<a href="#" target="_blank">&nbsp;</a>' + 
-							'<div class="mejs-ads-skip-block">' + 
-								'<span class="mejs-ads-skip-message"></span>' +
-								'<span class="mejs-ads-skip-button">' + mejs.i18n.t('mejs.ad-skip') + '&raquo;</span>' +
-							'</div>' +
-						'</div>')
+					$(`<div class="mejs-layer mejs-overlay mejs-ads"><a href="#" target="_blank">&nbsp;</a><div class="mejs-ads-skip-block"><span class="mejs-ads-skip-message"></span><span class="mejs-ads-skip-button">${mejs.i18n.t('mejs.ad-skip')}&raquo;</span></div></div>`)
 							.insertBefore( layers.find('.mejs-overlay-play') )
 							.hide();
 			
@@ -128,9 +122,9 @@
 		},
 		
 		
-		adsMediaTryingToStart: function() {
+		adsMediaTryingToStart(...args) {
 			
-			var t = this;
+			const t = this;
 		
 			// make sure to pause until the ad data is loaded
 			if (t.adsDataIsLoading && !t.media.paused) {
@@ -140,9 +134,9 @@
 			t.adsPlayerHasStarted = true;
 		},	
 		
-		adsStartPreroll: function() {
+		adsStartPreroll(...args) {
 					
-			var t = this;
+			const t = this;
 			
 			console.log('adsStartPreroll', 'url', t.options.adsPrerollMediaUrl[t.options.indexPreroll]);
 			
@@ -169,31 +163,30 @@
 			}
 		},
 		
-		adsPrerollMeta: function() {
-			
-			var t = this,
-				newDuration = 0;
-		
-			console.log('loadedmetadata', t.media.duration, t.adsCurrentMediaDuration);
-				
-			// if duration has been set, show that
-			if (t.options.duration > 0) {
+		adsPrerollMeta(...args) {
+            const t = this;
+            let newDuration = 0;
+
+            console.log('loadedmetadata', t.media.duration, t.adsCurrentMediaDuration);
+
+            // if duration has been set, show that
+            if (t.options.duration > 0) {
 				newDuration = t.options.duration;
 			} else if (!isNaN(t.adsCurrentMediaDuration)) {
 				newDuration = t.adsCurrentMediaDuration;
 			}
-			
-			setTimeout(function() {
+
+            setTimeout(() => {
 				t.controls.find('.mejs-duration').html( 
 					mejs.Utility.secondsToTimeCode(newDuration, t.options.alwaysShowHours)
 					);
 			}, 250);
-		},
+        },
 		
-		adsPrerollStarted: function() {
+		adsPrerollStarted(...args) {
 			console.log('adsPrerollStarted');
 		
-			var t = this;
+			const t = this;
 			t.media.removeEventListener('playing', t.adsPrerollStartedProxy);		
 			
 			// turn off controls until the preroll is done
@@ -229,10 +222,10 @@
 			t.container.trigger('mejsprerollstarted');			
 		},
 
-		adsPrerollUpdate: function() {
+		adsPrerollUpdate(...args) {
 			//console.log('adsPrerollUpdate');
 		
-			var t = this;
+			const t = this;
 			
 			if (t.options.adsPrerollAdEnableSkip && t.options.adsPrerollAdSkipSeconds > 0) {
 				// update message
@@ -248,10 +241,10 @@
 			t.container.trigger('mejsprerolltimeupdate');
 		},
 		
-		adsPrerollEnded: function() {
+		adsPrerollEnded(...args) {
 			console.log('adsPrerollEnded');
 			
-			var t = this;
+			const t = this;
 
 			t.container.trigger('mejsprerollended');
 
@@ -262,14 +255,14 @@
 				t.adRestoreMainMedia();
 		},
 		
-		adRestoreMainMedia: function() {
+		adRestoreMainMedia(...args) {
 
 			console.log('adRestoreMainMedia', this.adsCurrentMediaUrl);
 
-			var t = this;
+			const t = this;
 			
 			t.media.setSrc(t.adsCurrentMediaUrl);
-			setTimeout(function() {
+			setTimeout(() => {
 				t.media.load();
 				t.media.play();
 			}, 10);
@@ -287,10 +280,10 @@
 
 		},
 
-		adsAdClick: function(e) {
+		adsAdClick(e) {
 			console.log('adsAdClicked');
 			
-			var t = this;
+			const t = this;
 			
 			if (t.media.paused) {
 				t.media.play();
@@ -301,9 +294,9 @@
 			t.container.trigger('mejsprerolladsclicked');
 		},
 		
-		adsSkipClick: function() {
+		adsSkipClick(...args) {
 			console.log('adsSkipClick');		
-			var t = this;
+			const t = this;
 			
 			t.container.trigger('mejsprerollskipclicked');
 			t.container.trigger('mejsprerollended');
@@ -316,8 +309,8 @@
 		},
 
 		// tells calling function if ads have finished running
-		prerollAdsFinished: function() {
-			var t = this;
+		prerollAdsFinished(...args) {
+			const t = this;
 			if ( t.options.indexPreroll === t.options.adsPrerollMediaUrl.length )
 				return true;
 			else
@@ -325,17 +318,17 @@
 	 	},
 		
 		// fires off fake XHR requests
-		adsLoadUrl: function(url) {
-			console.log('adsLoadUrl', url);		
-			
-			var img = new Image(),
-				rnd = Math.round(Math.random()*100000);
-				
-			img.src = url + ((url.indexOf('?') > 0) ? '&' : '?') + 'random' + rnd + '=' + rnd;
-			img.loaded = function() {
+		adsLoadUrl(url) {
+            console.log('adsLoadUrl', url);
+
+            let img = new Image();
+            const rnd = Math.round(Math.random()*100000);
+
+            img.src = `${url + ((url.indexOf('?') > 0) ? '&' : '?')}random${rnd}=${rnd}`;
+            img.loaded = () => {
 				img = null;
 			};
-		}
+        }
 	});
 
-})(mejs.$);
+}))(mejs.$);
